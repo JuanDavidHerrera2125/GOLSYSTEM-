@@ -5,14 +5,14 @@ import JUANDEV.PRO.GOLSYSTEM.enums.EstadoTorneo;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
-import org.springframework.data.annotation.Id;
+
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Getter @Setter
-@EntityScan
+@Entity
 @Table(name = "torneo")
 public class Torneo {
 
@@ -20,20 +20,28 @@ public class Torneo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String nombre;
 
     private String logo;
 
+    @Column(nullable = false)
     private Integer anio;
 
     private String descripcion;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+    @PrePersist
+    public void prePersist(){
+        this.createdAt = LocalDateTime.now();
+    }
 
     @Enumerated(EnumType.STRING)
     private EstadoTorneo estado = EstadoTorneo.CONFIGURACION;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private CategoriaGenero categoriaGenero;
 
     // ================= CONFIGURACION DE EDADES =================
@@ -47,11 +55,20 @@ public class Torneo {
 
     // ================= RELACIONES =================
 
-    @OneToMany(mappedBy = "torneo", cascade = CascadeType.ALL , orphanRemoval = true)
+    @OneToMany(mappedBy = "torneo", cascade = CascadeType.ALL , orphanRemoval = true , fetch = FetchType.LAZY)
     private List<Equipo>equipos = new ArrayList<>();
 
-    @OneToMany(mappedBy = "torneo", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "torneo", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Fase>fases = new ArrayList<>();
+
+    @OneToMany(mappedBy = "torneo" , fetch = FetchType.LAZY)
+    private List<TablaPosiciones>tablaPosiciones;
+
+    @OneToMany(mappedBy = "torneo", fetch = FetchType.LAZY)
+    private List<Premio>premios;
+
+    @OneToMany(mappedBy = "torneo" , fetch = FetchType.LAZY)
+    private List<HistorialCampeon>historial;
 
 
 }

@@ -10,7 +10,9 @@ import java.util.List;
 
 @Getter @Setter
 @Entity
-@Table (name = "equipo")
+@Table (name = "equipo", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"torneo_id" , "nombre"})
+})
 public class Equipo {
 
     @Id
@@ -21,6 +23,7 @@ public class Equipo {
     private String logo;
     private String ciudad;
     private String tecnico;
+    private Integer estrellas = 0;
 
     @ManyToOne
     private Torneo torneo;
@@ -28,4 +31,12 @@ public class Equipo {
     @OneToMany(mappedBy = "equipo", cascade = CascadeType.ALL, orphanRemoval = true )
     private List<Jugador>jugadores = new ArrayList<>();
 
+    @OneToMany(mappedBy = "equipo")
+    private List<TablaPosiciones>posiciones;
+
+    @OneToMany(mappedBy = "equipoLocal")
+    private List<Partido>partidosLocal;
+
+    @OneToMany(mappedBy = "equipoVisitante")
+    private List<Partido>partidosVisitante;
 }
