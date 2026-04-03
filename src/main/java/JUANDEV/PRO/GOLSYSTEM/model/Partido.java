@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 @Getter @Setter
 @Entity
@@ -51,5 +52,12 @@ public class Partido {
 
     @OneToOne(mappedBy = "partido", cascade = CascadeType.ALL)
     private Resultado resultado;
+
+    // Un partido tiene muchos goles
+    @OneToMany(mappedBy = "partido" , cascade = CascadeType.ALL)
+    private List<Gol>goles;
+
+    @OneToMany(mappedBy = "partido" , cascade = CascadeType.ALL)
+    private List<Tarjeta>tarjetas;
 
 }

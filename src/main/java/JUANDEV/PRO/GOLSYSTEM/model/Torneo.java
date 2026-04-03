@@ -61,7 +61,7 @@ public class Torneo {
     @OneToMany(mappedBy = "torneo", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Fase>fases = new ArrayList<>();
 
-    @OneToMany(mappedBy = "torneo" , fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "torneo" , fetch = FetchType.LAZY , cascade = CascadeType.ALL)
     private List<TablaPosiciones>tablaPosiciones;
 
     @OneToMany(mappedBy = "torneo", fetch = FetchType.LAZY)

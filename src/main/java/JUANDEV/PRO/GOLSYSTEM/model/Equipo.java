@@ -39,4 +39,7 @@ public class Equipo {
 
     @OneToMany(mappedBy = "equipoVisitante")
     private List<Partido>partidosVisitante;
+
+    @OneToMany(mappedBy = "equipo")
+    private List<TablaPosiciones>tablaPosiciones;
 }

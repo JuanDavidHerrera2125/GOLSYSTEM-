@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter @Setter
 @Entity
@@ -23,5 +24,16 @@ public class Jugador {
 
     @ManyToOne
     private Equipo equipo;
+
+    // Un jugador puede anotar muchos goles
+    @OneToMany(mappedBy = "jugador" , cascade = CascadeType.ALL)
+    private List<Gol> goles;
+
+    @OneToMany(mappedBy = "jugador" , cascade = CascadeType.ALL)
+    private List<Tarjeta>tarjetas;
+
+    @OneToMany(mappedBy = "jugador" , cascade = CascadeType.ALL)
+    private List<Suspension>suspensiones;
+
 
 }

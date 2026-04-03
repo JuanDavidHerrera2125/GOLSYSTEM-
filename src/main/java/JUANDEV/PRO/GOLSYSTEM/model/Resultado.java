@@ -33,6 +33,6 @@ public class Resultado {
 
     // Cada partido tiene un único resultado
     @OneToOne
-    @JoinColumn(name = "partido_id" , unique = true)
+    @JoinColumn(name = "partido_id" ,nullable = false, unique = true)
     private Partido partido;
 }
