@@ -1,7 +1,7 @@
 package JUANDEV.PRO.GOLSYSTEM.repository;
 
-import JUANDEV.PRO.GOLSYSTEM.model.Resultado;
+import JUANDEV.PRO.GOLSYSTEM.model.ResultadoPartido;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ResultadoRepository extends JpaRepository<Resultado, Long> {
+public interface ResultadoRepository extends JpaRepository<ResultadoPartido, Long> {
 }

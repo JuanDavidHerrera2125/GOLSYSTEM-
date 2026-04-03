@@ -10,22 +10,22 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-@Table(name = "grupo")
-public class Grupo {
+@Table(name = "tabla_posicion")
+public class TablaPosicion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nombre;
-
+    // 🔥 Puede ser tabla de grupo o general
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fase_id")
     private Fase fase;
 
-    @OneToMany(mappedBy = "grupo", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<GrupoEquipo> equipos = new ArrayList<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "grupo_id")
+    private Grupo grupo;
 
-    @OneToMany(mappedBy = "grupo")
-    private List<Partido> partidos = new ArrayList<>();
+    @OneToMany(mappedBy = "tabla", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PosicionEquipo> posiciones = new ArrayList<>();
 }

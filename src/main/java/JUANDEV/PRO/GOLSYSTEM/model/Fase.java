@@ -8,14 +8,15 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter @Setter
+@Getter
+@Setter
 @Entity
 @Table(name = "fase")
 public class Fase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
+    private Long id;
 
     private String nombre;
 
@@ -24,13 +25,13 @@ public class Fase {
     @Enumerated(EnumType.STRING)
     private TipoFase tipoFase;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "torneo_id")
     private Torneo torneo;
 
     @OneToMany(mappedBy = "fase", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Grupo>grupos = new ArrayList<>();
+    private List<Grupo> grupos = new ArrayList<>();
 
-
-
-
+    @OneToMany(mappedBy = "fase", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Partido> partidos = new ArrayList<>();
 }

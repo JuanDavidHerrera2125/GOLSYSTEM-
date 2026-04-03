@@ -4,14 +4,14 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter @Setter
+@Getter
+@Setter
 @Entity
-@Table (name = "equipo", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"torneo_id" , "nombre"})
+@Table(name = "equipo", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"torneo_id", "nombre"})
 })
 public class Equipo {
 
@@ -25,21 +25,17 @@ public class Equipo {
     private String tecnico;
     private Integer estrellas = 0;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "torneo_id")
     private Torneo torneo;
 
-    @OneToMany(mappedBy = "equipo", cascade = CascadeType.ALL, orphanRemoval = true )
-    private List<Jugador>jugadores = new ArrayList<>();
+    @OneToMany(mappedBy = "equipo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Jugador> jugadores = new ArrayList<>();
 
-    @OneToMany(mappedBy = "equipo")
-    private List<TablaPosiciones>posiciones;
-
+    // ⚠️ Estas relaciones son útiles para consultas, se mantienen
     @OneToMany(mappedBy = "equipoLocal")
-    private List<Partido>partidosLocal;
+    private List<Partido> partidosLocal = new ArrayList<>();
 
     @OneToMany(mappedBy = "equipoVisitante")
-    private List<Partido>partidosVisitante;
-
-    @OneToMany(mappedBy = "equipo")
-    private List<TablaPosiciones>tablaPosiciones;
+    private List<Partido> partidosVisitante = new ArrayList<>();
 }

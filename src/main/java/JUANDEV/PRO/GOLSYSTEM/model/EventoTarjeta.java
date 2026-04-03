@@ -5,10 +5,11 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter @Setter
+@Getter
+@Setter
 @Entity
-@Table (name = "tarjeta")
-public class Tarjeta {
+@Table(name = "evento_tarjeta")
+public class EventoTarjeta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,13 +20,13 @@ public class Tarjeta {
     @Enumerated(EnumType.STRING)
     private TipoTarjeta tipoTarjeta;
 
-    // Una tarjeta ocurre en un partido
-    @ManyToOne
+    // ================= RELACIONES =================
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "partido_id", nullable = false)
     private Partido partido;
 
-    // Jugador sancionado
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "jugador_id", nullable = false)
     private Jugador jugador;
 }

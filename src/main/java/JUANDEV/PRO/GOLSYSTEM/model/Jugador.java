@@ -5,9 +5,11 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
-@Getter @Setter
+@Getter
+@Setter
 @Entity
 @Table(name = "jugador")
 public class Jugador {
@@ -22,18 +24,18 @@ public class Jugador {
     private String documento;
     private String foto;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "equipo_id")
     private Equipo equipo;
 
-    // Un jugador puede anotar muchos goles
-    @OneToMany(mappedBy = "jugador" , cascade = CascadeType.ALL)
-    private List<Gol> goles;
+    // ================= EVENTOS =================
 
-    @OneToMany(mappedBy = "jugador" , cascade = CascadeType.ALL)
-    private List<Tarjeta>tarjetas;
+    @OneToMany(mappedBy = "jugador", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventoGol> goles = new ArrayList<>();
 
-    @OneToMany(mappedBy = "jugador" , cascade = CascadeType.ALL)
-    private List<Suspension>suspensiones;
+    @OneToMany(mappedBy = "jugador", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventoTarjeta> tarjetas = new ArrayList<>();
 
-
+    @OneToMany(mappedBy = "jugador", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Suspension> suspensiones = new ArrayList<>();
 }

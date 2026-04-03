@@ -4,9 +4,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter @Setter
+@Getter
+@Setter
 @Entity
-@Table (name = "historial_campeon")
+@Table(name = "historial_campeon")
 public class HistorialCampeon {
 
     @Id
@@ -15,14 +16,11 @@ public class HistorialCampeon {
 
     private Integer anio;
 
-    // El campeonato pertenece a un torneo específico (ej: Liga 2025)
-    @ManyToOne
-    @JoinColumn(name = "torneo_id" , nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "torneo_id", nullable = false)
     private Torneo torneo;
 
-    // Equipo que ganó ese torneo
-    @ManyToOne
-    @JoinColumn(name = "equipo_id" , nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "equipo_id", nullable = false)
     private Equipo equipo;
-
 }

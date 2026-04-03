@@ -7,11 +7,13 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
-@Getter @Setter
+@Getter
+@Setter
 @Entity
-@Table (name = "partido")
+@Table(name = "partido")
 public class Partido {
 
     @Id
@@ -20,44 +22,37 @@ public class Partido {
 
     private LocalDate fecha;
     private LocalTime hora;
+
+    // ⚠️ Temporal (luego será entidad Jornada)
     private Integer jornada;
 
     @Enumerated(EnumType.STRING)
     private EstadoPartido estado = EstadoPartido.BORRADOR;
 
-     //*************************************
-     //************ RELACIONES *************
-     //**************************************
+    // ================= RELACIONES =================
 
-
-    // Un partido pertenece a una fase (liga, grupos o eliminación)
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fase_id", nullable = false)
     private Fase fase;
 
-    // Solo aplica si el partido es de fase de grupos (puede ser null)
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "grupo_id")
     private Grupo grupo;
 
-    // Equipo local (obligatorio)
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "local_id", nullable = false)
     private Equipo equipoLocal;
 
-    // Equipo local (obligatorio)
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "visitante_id", nullable = false)
     private Equipo equipoVisitante;
 
-    @OneToOne(mappedBy = "partido", cascade = CascadeType.ALL)
-    private Resultado resultado;
+    @OneToOne(mappedBy = "partido", cascade = CascadeType.ALL, orphanRemoval = true)
+    private ResultadoPartido resultadoPartido;
 
-    // Un partido tiene muchos goles
-    @OneToMany(mappedBy = "partido" , cascade = CascadeType.ALL)
-    private List<Gol>goles;
+    @OneToMany(mappedBy = "partido", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventoGol> goles = new ArrayList<>();
 
-    @OneToMany(mappedBy = "partido" , cascade = CascadeType.ALL)
-    private List<Tarjeta>tarjetas;
-
+    @OneToMany(mappedBy = "partido", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventoTarjeta> tarjetas = new ArrayList<>();
 }

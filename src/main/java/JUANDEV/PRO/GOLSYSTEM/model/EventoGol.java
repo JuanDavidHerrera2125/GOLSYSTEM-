@@ -4,28 +4,31 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-
-@Getter @Setter
+@Getter
+@Setter
 @Entity
-@Table(name = "gol")
-public class Gol {
+@Table(name = "evento_gol")
+public class EventoGol {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private Integer minuto;
 
     @Column(name = "es_penal")
-    private boolean esPenal = false;
+    private Boolean esPenal;
 
-    //******************llaves foráneas *********************
+    @Column(name = "es_autogol")
+    private Boolean esAutogol;
 
-    @ManyToOne
+    // ================= RELACIONES =================
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "partido_id", nullable = false)
     private Partido partido;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "jugador_id", nullable = false)
     private Jugador jugador;
-
 }
