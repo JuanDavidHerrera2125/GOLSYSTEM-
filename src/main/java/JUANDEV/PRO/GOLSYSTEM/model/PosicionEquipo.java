@@ -33,8 +33,11 @@ public class PosicionEquipo {
     private Integer amarillas = 0;
     private Integer rojas = 0;
 
-    // 🔥 posición en la tabla (ranking)
     private Integer posicion;
+
+    // BLOQUEO OPTIMISTA PARA PRODUCCIÓN
+    @Version
+    private Long version;
 
     // ================= RELACIONES =================
 

@@ -5,6 +5,8 @@ import JUANDEV.PRO.GOLSYSTEM.enums.EstadoTorneo;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,6 +15,7 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "torneo")
 public class Torneo {
 
@@ -30,13 +33,11 @@ public class Torneo {
 
     private String descripcion;
 
+    @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
+    // ⚠️ REQUIERE @EnableJpaAuditing en configuración
 
     @Enumerated(EnumType.STRING)
     private EstadoTorneo estado = EstadoTorneo.CONFIGURACION;
@@ -45,16 +46,14 @@ public class Torneo {
     @Column(nullable = false)
     private CategoriaGenero categoriaGenero;
 
-    // ================= EDAD =================
     private Integer edadMin;
     private Integer edadMax;
 
-    // ================= PUNTOS =================
     private Integer puntosVictoria = 3;
     private Integer puntosEmpate = 1;
     private Integer puntosDerrota = 0;
 
-    // ================= RELACIONES =================
+    // ⚠️ NO usar @ToString ni @Data (evita loops)
 
     @OneToMany(mappedBy = "torneo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Equipo> equipos = new ArrayList<>();
@@ -65,9 +64,25 @@ public class Torneo {
     @OneToMany(mappedBy = "torneo", cascade = CascadeType.ALL)
     private List<TablaPosicion> tablas = new ArrayList<>();
 
-    @OneToMany(mappedBy = "torneo")
-    private List<Premio> premios = new ArrayList<>();
+    // ================= HELPERS =================
 
-    @OneToMany(mappedBy = "torneo")
-    private List<HistorialCampeon> historial = new ArrayList<>();
+    public void addEquipo(Equipo equipo) {
+        equipos.add(equipo);
+        equipo.setTorneo(this);
+    }
+
+    public void removeEquipo(Equipo equipo) {
+        equipos.remove(equipo);
+        equipo.setTorneo(null);
+    }
+
+    public void addFase(Fase fase) {
+        fases.add(fase);
+        fase.setTorneo(this);
+    }
+
+    public void removeFase(Fase fase) {
+        fases.remove(fase);
+        fase.setTorneo(null);
+    }
 }

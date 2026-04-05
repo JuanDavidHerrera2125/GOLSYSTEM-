@@ -22,12 +22,12 @@ public class Suspension {
     @Column(nullable = false)
     private Boolean activa = true;
 
-    // 🔥 Jugador sancionado
+    //Jugador sancionado
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "jugador_id", nullable = false)
     private Jugador jugador;
 
-    // 🔥 Partido donde ocurrió la sanción (clave en torneos reales)
+    //Partido donde ocurrió la sanción (clave en torneos reales)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "partido_origen_id")
     private Partido partidoOrigen;

@@ -10,9 +10,8 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-@Table(name = "equipo", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"torneo_id", "nombre"})
-})
+@Table(name = "equipo",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"torneo_id", "nombre"}))
 public class Equipo {
 
     @Id
@@ -29,13 +28,20 @@ public class Equipo {
     @JoinColumn(name = "torneo_id")
     private Torneo torneo;
 
+    // ⚠️ NO usar @ToString ni @Data
+
     @OneToMany(mappedBy = "equipo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Jugador> jugadores = new ArrayList<>();
 
-    // ⚠️ Estas relaciones son útiles para consultas, se mantienen
-    @OneToMany(mappedBy = "equipoLocal")
-    private List<Partido> partidosLocal = new ArrayList<>();
+    // ================= HELPERS =================
 
-    @OneToMany(mappedBy = "equipoVisitante")
-    private List<Partido> partidosVisitante = new ArrayList<>();
+    public void addJugador(Jugador jugador) {
+        jugadores.add(jugador);
+        jugador.setEquipo(this);
+    }
+
+    public void removeJugador(Jugador jugador) {
+        jugadores.remove(jugador);
+        jugador.setEquipo(null);
+    }
 }

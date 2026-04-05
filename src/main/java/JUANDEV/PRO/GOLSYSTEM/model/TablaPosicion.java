@@ -17,7 +17,6 @@ public class TablaPosicion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 🔥 Puede ser tabla de grupo o general
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fase_id")
     private Fase fase;
@@ -28,4 +27,16 @@ public class TablaPosicion {
 
     @OneToMany(mappedBy = "tabla", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PosicionEquipo> posiciones = new ArrayList<>();
+
+    // ================= HELPERS =================
+
+    public void addPosicion(PosicionEquipo posicion) {
+        posiciones.add(posicion);
+        posicion.setTabla(this);
+    }
+
+    public void removePosicion(PosicionEquipo posicion) {
+        posiciones.remove(posicion);
+        posicion.setTabla(null);
+    }
 }

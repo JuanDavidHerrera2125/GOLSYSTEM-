@@ -23,13 +23,10 @@ public class Partido {
     private LocalDate fecha;
     private LocalTime hora;
 
-    // ⚠️ Temporal (luego será entidad Jornada)
     private Integer jornada;
 
     @Enumerated(EnumType.STRING)
     private EstadoPartido estado = EstadoPartido.BORRADOR;
-
-    // ================= RELACIONES =================
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fase_id", nullable = false)
@@ -47,6 +44,11 @@ public class Partido {
     @JoinColumn(name = "visitante_id", nullable = false)
     private Equipo equipoVisitante;
 
+    // 🔥 NUEVA RELACIÓN CORRECTA
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "escenario_id")
+    private Escenario escenario;
+
     @OneToOne(mappedBy = "partido", cascade = CascadeType.ALL, orphanRemoval = true)
     private ResultadoPartido resultadoPartido;
 
@@ -55,4 +57,23 @@ public class Partido {
 
     @OneToMany(mappedBy = "partido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventoTarjeta> tarjetas = new ArrayList<>();
+
+    // ================= MÉTODOS DE CONVENIENCIA (Sincronización) =================
+
+    /**
+     * Agrega un gol a la lista del partido y establece la relación inversa.
+     */
+    public void addGol(EventoGol gol) {
+        this.goles.add(gol);
+        gol.setPartido(this); // Sincronización bidireccional
+    }
+
+    /**
+     * Agrega una tarjeta a la lista del partido y establece la relación inversa.
+     */
+    public void addTarjeta(EventoTarjeta tarjeta) {
+        this.tarjetas.add(tarjeta);
+        tarjeta.setPartido(this); // Sincronización bidireccional
+    }
+
 }

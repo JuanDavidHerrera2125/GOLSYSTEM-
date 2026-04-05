@@ -19,7 +19,6 @@ public class Fase {
     private Long id;
 
     private String nombre;
-
     private Integer orden;
 
     @Enumerated(EnumType.STRING)
@@ -34,4 +33,26 @@ public class Fase {
 
     @OneToMany(mappedBy = "fase", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Partido> partidos = new ArrayList<>();
+
+    // ================= HELPERS =================
+
+    public void addGrupo(Grupo grupo) {
+        grupos.add(grupo);
+        grupo.setFase(this);
+    }
+
+    public void removeGrupo(Grupo grupo) {
+        grupos.remove(grupo);
+        grupo.setFase(null);
+    }
+
+    public void addPartido(Partido partido) {
+        partidos.add(partido);
+        partido.setFase(this);
+    }
+
+    public void removePartido(Partido partido) {
+        partidos.remove(partido);
+        partido.setFase(null);
+    }
 }

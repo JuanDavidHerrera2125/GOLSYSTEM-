@@ -19,6 +19,7 @@ public class Jugador {
     private Long id;
 
     private String nombre;
+    private String apellido;
     private Integer numero;
     private LocalDate fechaNacimiento;
     private String documento;
@@ -28,7 +29,7 @@ public class Jugador {
     @JoinColumn(name = "equipo_id")
     private Equipo equipo;
 
-    // ================= EVENTOS =================
+    // ⚠️ NO usar @ToString ni @Data
 
     @OneToMany(mappedBy = "jugador", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventoGol> goles = new ArrayList<>();

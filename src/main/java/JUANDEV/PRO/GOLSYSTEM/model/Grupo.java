@@ -26,6 +26,18 @@ public class Grupo {
     @OneToMany(mappedBy = "grupo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GrupoEquipo> equipos = new ArrayList<>();
 
-    @OneToMany(mappedBy = "grupo")
+    @OneToMany(mappedBy = "grupo", cascade = CascadeType.ALL)
     private List<Partido> partidos = new ArrayList<>();
+
+    // ================= HELPERS =================
+
+    public void addEquipo(GrupoEquipo ge) {
+        equipos.add(ge);
+        ge.setGrupo(this);
+    }
+
+    public void removeEquipo(GrupoEquipo ge) {
+        equipos.remove(ge);
+        ge.setGrupo(null);
+    }
 }
