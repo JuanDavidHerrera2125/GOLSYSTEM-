@@ -1,5 +1,6 @@
 package JUANDEV.PRO.GOLSYSTEM.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +23,7 @@ public class Escenario {
 
     //Relación con los partidos que se juegan en este escenario
     //Evitar usar Lombok @Data o toString que incluya esta lista para prevenir loops infinitos
+    @JsonIgnore
     @OneToMany(mappedBy = "escenario" , cascade = CascadeType.ALL , orphanRemoval = true)
     private List<Partido> partidos = new ArrayList<>();
 }

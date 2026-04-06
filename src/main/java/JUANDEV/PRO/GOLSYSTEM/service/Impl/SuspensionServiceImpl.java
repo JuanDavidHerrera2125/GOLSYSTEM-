@@ -92,4 +92,14 @@ public class SuspensionServiceImpl implements SuspensionService {
 
         return suspensionRepository.findByJugadorIdAndActivaTrue(jugadorId);
     }
+
+    @Override
+    public List<Suspension> findAll() {
+        return suspensionRepository.findAll();
+    }
+
+    @Override
+    public Suspension save(Suspension suspension) {
+        return suspensionRepository.save(suspension);
+    }
 }

@@ -28,6 +28,10 @@ public class TablaPosicion {
     @OneToMany(mappedBy = "tabla", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PosicionEquipo> posiciones = new ArrayList<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "torneo_id", nullable = false)
+    private Torneo torneo; //
+
     // ================= HELPERS =================
 
     public void addPosicion(PosicionEquipo posicion) {

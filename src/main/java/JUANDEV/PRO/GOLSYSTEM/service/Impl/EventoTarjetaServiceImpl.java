@@ -83,14 +83,18 @@ public class EventoTarjetaServiceImpl implements EventoTarjetaService {
     }
 
     @Override
-    public Optional<EventoTarjeta> findByPartido(Long partidoId) {
-        // Llamando al método correcto con el sufijo "Id"
-        return eventoTarjetaRepository.findByPartidoId(partidoId);
+    public List<EventoTarjeta> findByEquipo_Id(Long equipoId) {
+        // Llama al nuevo método corregido del repositorio
+        return eventoTarjetaRepository.findByJugador_Equipo_Id(equipoId);
     }
 
     @Override
-    public Optional<EventoTarjeta> findByJugador(Long jugadorId) {
-        //Llamando al método correcto con el sufijo "Id"
-        return eventoTarjetaRepository.findByJugadorId(jugadorId);
+    public Optional<EventoTarjeta> findByJugador_Id(Long jugadorId) {
+        return eventoTarjetaRepository.findByJugador_Id(jugadorId);
+    }
+
+    @Override
+    public Optional<EventoTarjeta> findByPartido_Id(Long partidoId) {
+        return eventoTarjetaRepository.findByPartido_Id(partidoId);
     }
 }

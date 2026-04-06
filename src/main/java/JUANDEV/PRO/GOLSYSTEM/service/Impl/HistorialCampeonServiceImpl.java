@@ -37,17 +37,17 @@ public class HistorialCampeonServiceImpl implements HistorialCampeonService {
         Torneo torneo = torneoRepository.findById(torneoId)
                 .orElseThrow(() -> new RuntimeException("Torneo no encontrado con id: " + torneoId));
 
-        // 🔍 Buscar equipo
+        // Buscar equipo
         Equipo equipo = equipoRepository.findById(equipoId)
                 .orElseThrow(() -> new RuntimeException("Equipo no encontrado con id: " + equipoId));
 
-        // ⚠️ Validación: evitar duplicar campeón en mismo torneo
+        // Validación: evitar duplicar campeón en mismo torneo
         List<HistorialCampeon> existentes = historialCampeonRepository.findByTorneoId(torneoId);
         if (!existentes.isEmpty()) {
             throw new RuntimeException("Este torneo ya tiene campeón registrado");
         }
 
-        // 🏆 Crear registro histórico
+        // Crear registro histórico
         HistorialCampeon historial = new HistorialCampeon();
         historial.setTorneo(torneo);
         historial.setEquipo(equipo);

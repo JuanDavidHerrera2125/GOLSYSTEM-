@@ -1,5 +1,6 @@
 package JUANDEV.PRO.GOLSYSTEM.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,8 +29,9 @@ public class Equipo {
     @JoinColumn(name = "torneo_id")
     private Torneo torneo;
 
-    // ⚠️ NO usar @ToString ni @Data
+    //NO usar @ToString ni @Data
 
+    @JsonIgnore
     @OneToMany(mappedBy = "equipo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Jugador> jugadores = new ArrayList<>();
 

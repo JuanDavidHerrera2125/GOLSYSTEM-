@@ -17,4 +17,6 @@ public interface SuspensionService {
 
     // Obtener suspensiones activas de un jugador
     List<Suspension> obtenerSuspensionesActivas(Long jugadorId);
+    List<Suspension> findAll();
+    Suspension save(Suspension suspension);
 }

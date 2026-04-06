@@ -2,6 +2,7 @@ package JUANDEV.PRO.GOLSYSTEM.model;
 
 import JUANDEV.PRO.GOLSYSTEM.enums.CategoriaGenero;
 import JUANDEV.PRO.GOLSYSTEM.enums.EstadoTorneo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,7 +38,7 @@ public class Torneo {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // ⚠️ REQUIERE @EnableJpaAuditing en configuración
+    //REQUIERE @EnableJpaAuditing en configuración
 
     @Enumerated(EnumType.STRING)
     private EstadoTorneo estado = EstadoTorneo.CONFIGURACION;
@@ -55,12 +56,15 @@ public class Torneo {
 
     // ⚠️ NO usar @ToString ni @Data (evita loops)
 
+    @JsonIgnore
     @OneToMany(mappedBy = "torneo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Equipo> equipos = new ArrayList<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "torneo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Fase> fases = new ArrayList<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "torneo", cascade = CascadeType.ALL)
     private List<TablaPosicion> tablas = new ArrayList<>();
 
@@ -84,5 +88,10 @@ public class Torneo {
     public void removeFase(Fase fase) {
         fases.remove(fase);
         fase.setTorneo(null);
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = java.time.LocalDateTime.now();
     }
 }

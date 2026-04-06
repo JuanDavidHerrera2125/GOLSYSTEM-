@@ -15,17 +15,14 @@ import java.util.Optional;
 @Transactional
 public class EventoGolServiceImpl implements EventoGolService {
 
-    // 🔥 Cambiado a final para inyección por constructor (adiós advertencia de "never assigned")
     private final EventoGolRepository eventoGolRepository;
 
-    // 🔥 Constructor para inyección de dependencias limpia
     public EventoGolServiceImpl(EventoGolRepository eventoGolRepository) {
         this.eventoGolRepository = eventoGolRepository;
     }
 
     @Override
     public EventoGol save(EventoGol eventoGol) {
-        // Aseguramos sincronización con Jugador y Partido
         Jugador jugador = eventoGol.getJugador();
         if (jugador != null) {
             jugador.getGoles().add(eventoGol);
@@ -56,7 +53,6 @@ public class EventoGolServiceImpl implements EventoGolService {
                     existing.setEsPenal(eventoGol.getEsPenal());
                     existing.setEsAutogol(eventoGol.getEsAutogol());
 
-                    // Si cambia jugador o partido, sincronizar colecciones
                     if (eventoGol.getJugador() != null && !eventoGol.getJugador().equals(existing.getJugador())) {
                         existing.getJugador().getGoles().remove(existing);
                         eventoGol.getJugador().getGoles().add(existing);
@@ -90,24 +86,24 @@ public class EventoGolServiceImpl implements EventoGolService {
     }
 
     @Override
-    public List<EventoGol> findByJugadorId(Long jugadorId) {
-        return eventoGolRepository.findByJugadorId(jugadorId);
-    }
-
-    @Override
-    public List<EventoGol> findByEquipoId(Long equipoId) {
-        // 🔥 CORREGIDO: Ahora llama al método correcto generado en el repositorio
-        return eventoGolRepository.findByPartidoId(equipoId);
-    }
-
-    @Override
-    public List<EventoGol> findByPartidoId(Long partidoId) {
-        // 🔥 CORREGIDO: Ahora llama al método correcto generado en el repositorio
-        return eventoGolRepository.findByPartidoId(partidoId);
-    }
-
-    @Override
     public long count() {
         return eventoGolRepository.count();
+    }
+
+    // --- AQUÍ ESTÁ EL TRIPLE EMPAREJAMIENTO EXIGIDO POR INTELLIJ ---
+
+    @Override
+    public List<EventoGol> findByEquipo_Id(Long equipoId) {
+        return eventoGolRepository.findByJugador_Equipo_Id(equipoId);
+    }
+
+    @Override
+    public Optional<EventoGol> findByJugador_Id(Long jugadorId) {
+        return eventoGolRepository.findByJugador_Id(jugadorId);
+    }
+
+    @Override
+    public Optional<EventoGol> findByPartido_Id(Long partidoId) {
+        return eventoGolRepository.findByPartido_Id(partidoId);
     }
 }

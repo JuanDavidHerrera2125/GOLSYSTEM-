@@ -1,8 +1,11 @@
 package JUANDEV.PRO.GOLSYSTEM.service.Impl;
 
+import JUANDEV.PRO.GOLSYSTEM.dto.TablaPosicionDTO;
 import JUANDEV.PRO.GOLSYSTEM.enums.EstadoTorneo;
 import JUANDEV.PRO.GOLSYSTEM.enums.TipoFase;
+import JUANDEV.PRO.GOLSYSTEM.model.Equipo;
 import JUANDEV.PRO.GOLSYSTEM.model.Fase;
+import JUANDEV.PRO.GOLSYSTEM.model.Partido;
 import JUANDEV.PRO.GOLSYSTEM.model.Torneo;
 import JUANDEV.PRO.GOLSYSTEM.repository.TorneoRepository;
 import JUANDEV.PRO.GOLSYSTEM.service.FaseService;
@@ -12,8 +15,11 @@ import JUANDEV.PRO.GOLSYSTEM.service.TorneoService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -83,15 +89,12 @@ public class TorneoServiceImpl implements TorneoService {
 
     @Override
     public Torneo createTorneo(Torneo torneo) {
-
         torneo.setEstado(EstadoTorneo.CONFIGURACION);
-
         return torneoRepository.save(torneo);
     }
 
     @Override
     public void generateTorneo(Long torneoId) {
-
         Torneo torneo = getTorneoOrThrow(torneoId);
 
         if (torneo.getEstado() != EstadoTorneo.CONFIGURACION) {
@@ -103,27 +106,21 @@ public class TorneoServiceImpl implements TorneoService {
         }
 
         for (Fase fase : torneo.getFases()) {
-
-            // Generar fixture según tipo
             if (fase.getTipoFase() == TipoFase.LIGA) {
                 partidoService.generateFixtureLiga(fase.getId());
-
             } else if (fase.getTipoFase() == TipoFase.GRUPOS) {
                 partidoService.generateFixtureGrupos(fase.getId());
-
             } else if (fase.getTipoFase() == TipoFase.ELIMINACION) {
                 partidoService.generateFixtureEliminatoria(fase.getId());
             }
         }
 
         torneo.setEstado(EstadoTorneo.FIXTURE_GENERADO);
-
         torneoRepository.save(torneo);
     }
 
     @Override
     public void startTorneo(Long torneoId) {
-
         Torneo torneo = getTorneoOrThrow(torneoId);
 
         if (torneo.getEstado() != EstadoTorneo.FIXTURE_GENERADO) {
@@ -131,13 +128,11 @@ public class TorneoServiceImpl implements TorneoService {
         }
 
         torneo.setEstado(EstadoTorneo.EN_CURSO);
-
         torneoRepository.save(torneo);
     }
 
     @Override
     public void finishTorneo(Long torneoId) {
-
         Torneo torneo = getTorneoOrThrow(torneoId);
 
         if (torneo.getEstado() != EstadoTorneo.EN_CURSO) {
@@ -145,15 +140,11 @@ public class TorneoServiceImpl implements TorneoService {
         }
 
         torneo.setEstado(EstadoTorneo.FINALIZADO);
-
-        // Aquí puedes luego asignar premios automáticamente
-
         torneoRepository.save(torneo);
     }
 
     @Override
     public void archiveTorneo(Long torneoId) {
-
         Torneo torneo = getTorneoOrThrow(torneoId);
 
         if (torneo.getEstado() != EstadoTorneo.FINALIZADO) {
@@ -161,11 +152,94 @@ public class TorneoServiceImpl implements TorneoService {
         }
 
         torneo.setEstado(EstadoTorneo.ARCHIVADO);
-
         torneoRepository.save(torneo);
     }
 
-    // ================= HELPER =================
+    // ================= CONSULTA DE TABLA DINÁMICA =================
+
+    @Override
+    public List<TablaPosicionDTO> calcularTablaAcumulada(Long torneoId) {
+        return procesarCalculoDeTabla(torneoId, null);
+    }
+
+    @Override
+    public List<TablaPosicionDTO> calcularTablaHastaJornada(Long torneoId, Integer jornada) {
+        return procesarCalculoDeTabla(torneoId, jornada);
+    }
+
+    private List<TablaPosicionDTO> procesarCalculoDeTabla(Long torneoId, Integer jornadaLimite) {
+        Torneo torneo = getTorneoOrThrow(torneoId);
+
+        Map<Long, TablaPosicionDTO> mapaTabla = new HashMap<>();
+        for (Equipo equipo : torneo.getEquipos()) {
+            mapaTabla.put(equipo.getId(), new TablaPosicionDTO(equipo.getId(), equipo.getNombre()));
+        }
+
+        for (Fase fase : torneo.getFases()) {
+            for (Partido partido : fase.getPartidos()) {
+
+                if (jornadaLimite != null && partido.getJornada() > jornadaLimite) {
+                    continue;
+                }
+
+                // Usamos el enum EstadoPartido que vi en tu código (FINALIZADO)
+                if ("FINALIZADO".equals(partido.getEstado().toString())) {
+
+                    int golesLocal = 0;
+                    int golesVisitante = 0;
+
+                    // ⚽ SACAMOS LOS GOLES DE TU OBJETO RESULTADO_PARTIDO SI EXISTE
+                    if (partido.getResultadoPartido() != null) {
+                        golesLocal = partido.getResultadoPartido().getGolesLocal() != null ? partido.getResultadoPartido().getGolesLocal() : 0;
+                        golesVisitante = partido.getResultadoPartido().getGolesVisitante() != null ? partido.getResultadoPartido().getGolesVisitante() : 0;
+                    }
+
+                    TablaPosicionDTO localDTO = mapaTabla.get(partido.getEquipoLocal().getId());
+                    TablaPosicionDTO visitanteDTO = mapaTabla.get(partido.getEquipoVisitante().getId());
+
+                    localDTO.setPartidosJugados(localDTO.getPartidosJugados() + 1);
+                    visitanteDTO.setPartidosJugados(visitanteDTO.getPartidosJugados() + 1);
+
+                    localDTO.setGolesAFavor(localDTO.getGolesAFavor() + golesLocal);
+                    localDTO.setGolesEnContra(localDTO.getGolesEnContra() + golesVisitante);
+
+                    visitanteDTO.setGolesAFavor(visitanteDTO.getGolesAFavor() + golesVisitante);
+                    visitanteDTO.setGolesEnContra(visitanteDTO.getGolesEnContra() + golesLocal);
+
+                    if (golesLocal > golesVisitante) {
+                        localDTO.setPartidosGanados(localDTO.getPartidosGanados() + 1);
+                        localDTO.setPuntos(localDTO.getPuntos() + torneo.getPuntosVictoria());
+
+                        visitanteDTO.setPartidosPerdidos(visitanteDTO.getPartidosPerdidos() + 1);
+                        visitanteDTO.setPuntos(visitanteDTO.getPuntos() + torneo.getPuntosDerrota());
+                    } else if (golesLocal < golesVisitante) {
+                        visitanteDTO.setPartidosGanados(visitanteDTO.getPartidosGanados() + 1);
+                        visitanteDTO.setPuntos(visitanteDTO.getPuntos() + torneo.getPuntosVictoria());
+
+                        localDTO.setPartidosPerdidos(localDTO.getPartidosPerdidos() + 1);
+                        localDTO.setPuntos(localDTO.getPuntos() + torneo.getPuntosDerrota());
+                    } else {
+                        localDTO.setPartidosEmpatados(localDTO.getPartidosEmpatados() + 1);
+                        localDTO.setPuntos(localDTO.getPuntos() + torneo.getPuntosEmpate());
+
+                        visitanteDTO.setPartidosEmpatados(visitanteDTO.getPartidosEmpatados() + 1);
+                        visitanteDTO.setPuntos(visitanteDTO.getPuntos() + torneo.getPuntosEmpate());
+                    }
+
+                    localDTO.setDiferenciaGoles(localDTO.getGolesAFavor() - localDTO.getGolesEnContra());
+                    visitanteDTO.setDiferenciaGoles(visitanteDTO.getGolesAFavor() - visitanteDTO.getGolesEnContra());
+                }
+            }
+        }
+
+        return mapaTabla.values().stream()
+                .sorted((a, b) -> {
+                    int comparePuntos = b.getPuntos().compareTo(a.getPuntos());
+                    if (comparePuntos != 0) return comparePuntos;
+                    return b.getDiferenciaGoles().compareTo(a.getDiferenciaGoles());
+                })
+                .collect(Collectors.toList());
+    }
 
     private Torneo getTorneoOrThrow(Long torneoId) {
         return torneoRepository.findById(torneoId)

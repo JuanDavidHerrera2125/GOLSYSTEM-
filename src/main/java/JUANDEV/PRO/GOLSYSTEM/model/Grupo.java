@@ -1,5 +1,6 @@
 package JUANDEV.PRO.GOLSYSTEM.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,9 +24,11 @@ public class Grupo {
     @JoinColumn(name = "fase_id")
     private Fase fase;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "grupo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GrupoEquipo> equipos = new ArrayList<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "grupo", cascade = CascadeType.ALL)
     private List<Partido> partidos = new ArrayList<>();
 

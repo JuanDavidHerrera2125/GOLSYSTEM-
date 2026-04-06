@@ -14,6 +14,7 @@ public class Suspension {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "partido_suspendido", nullable = false)
     private Integer partidosSuspendido;
 
     @Column(length = 200)

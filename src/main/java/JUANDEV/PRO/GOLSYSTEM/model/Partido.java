@@ -1,6 +1,7 @@
 package JUANDEV.PRO.GOLSYSTEM.model;
 
 import JUANDEV.PRO.GOLSYSTEM.enums.EstadoPartido;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,12 +50,15 @@ public class Partido {
     @JoinColumn(name = "escenario_id")
     private Escenario escenario;
 
+    @JsonIgnore
     @OneToOne(mappedBy = "partido", cascade = CascadeType.ALL, orphanRemoval = true)
     private ResultadoPartido resultadoPartido;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "partido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventoGol> goles = new ArrayList<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "partido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventoTarjeta> tarjetas = new ArrayList<>();
 
