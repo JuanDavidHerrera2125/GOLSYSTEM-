@@ -1,7 +1,6 @@
 package JUANDEV.PRO.GOLSYSTEM.controller;
 
 import JUANDEV.PRO.GOLSYSTEM.model.Equipo;
-import JUANDEV.PRO.GOLSYSTEM.model.Jugador;
 import JUANDEV.PRO.GOLSYSTEM.service.EquipoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
