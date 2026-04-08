@@ -38,8 +38,6 @@ public class Torneo {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    //REQUIERE @EnableJpaAuditing en configuración
-
     @Enumerated(EnumType.STRING)
     private EstadoTorneo estado = EstadoTorneo.CONFIGURACION;
 
@@ -50,14 +48,22 @@ public class Torneo {
     private Integer edadMin;
     private Integer edadMax;
 
+    // Configuración de puntuación estándar
     private Integer puntosVictoria = 3;
     private Integer puntosEmpate = 1;
     private Integer puntosDerrota = 0;
 
-    // ⚠️ NO usar @ToString ni @Data (evita loops)
+    // --- NUEVOS CAMPOS PARA FLEXIBILIDAD ---
+    private Boolean esIdaYVueltaDefault = false;
+    private Integer cantidadEquiposClasificanDefault = 2;
+    // ---------------------------------------
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "torneo", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+            name = "torneo_equipo",
+            joinColumns = @JoinColumn(name = "torneo_id"),
+            inverseJoinColumns = @JoinColumn(name = "equipo_id")
+    )
     private List<Equipo> equipos = new ArrayList<>();
 
     @JsonIgnore
@@ -68,30 +74,32 @@ public class Torneo {
     @OneToMany(mappedBy = "torneo", cascade = CascadeType.ALL)
     private List<TablaPosicion> tablas = new ArrayList<>();
 
-    // ================= HELPERS =================
-
     public void addEquipo(Equipo equipo) {
-        equipos.add(equipo);
-        equipo.setTorneo(this);
+        if (!this.equipos.contains(equipo)) {
+            this.equipos.add(equipo);
+            equipo.getTorneos().add(this);
+        }
     }
 
     public void removeEquipo(Equipo equipo) {
-        equipos.remove(equipo);
-        equipo.setTorneo(null);
+        this.equipos.remove(equipo);
+        equipo.getTorneos().remove(this);
     }
 
     public void addFase(Fase fase) {
-        fases.add(fase);
+        this.fases.add(fase);
         fase.setTorneo(this);
     }
 
-    public void removeFase(Fase fase) {
-        fases.remove(fase);
-        fase.setTorneo(null);
+    public void addTabla(TablaPosicion tabla) {
+        this.tablas.add(tabla);
+        tabla.setTorneo(this);
     }
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = java.time.LocalDateTime.now();
+        if (this.createdAt == null) {
+            this.createdAt = java.time.LocalDateTime.now();
+        }
     }
 }

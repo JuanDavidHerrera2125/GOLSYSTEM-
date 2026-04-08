@@ -1,6 +1,7 @@
 package JUANDEV.PRO.GOLSYSTEM.model;
 
 import JUANDEV.PRO.GOLSYSTEM.enums.TipoDecision;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,23 +13,23 @@ import lombok.Setter;
 public class ResultadoPartido {
 
     @Id
-    private Long id;
+    private Long id; // Este ID será el mismo partido_id gracias a @MapsId
 
-    private Integer golesLocal;
-    private Integer golesVisitante;
+    private Integer golesLocal = 0;
+    private Integer golesVisitante = 0;
 
-    private Integer golesLocalExtra;
-    private Integer golesVisitanteExtra;
+    private Integer golesLocalExtra = 0;
+    private Integer golesVisitanteExtra = 0;
 
-    private Integer penalesLocal;
-    private Integer penalesVisitante;
+    private Integer penalesLocal = 0;
+    private Integer penalesVisitante = 0;
 
     @Enumerated(EnumType.STRING)
     private TipoDecision tipoDecision;
 
-    // 🔥 Relación PRO 1:1 compartiendo PK
     @OneToOne
     @MapsId
     @JoinColumn(name = "partido_id")
+    @JsonIgnore // Evitar recursividad al serializar el partido
     private Partido partido;
 }

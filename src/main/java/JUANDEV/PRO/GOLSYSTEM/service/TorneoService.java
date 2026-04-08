@@ -8,7 +8,6 @@ import java.util.Optional;
 
 public interface TorneoService {
 
-    // ================= CRUD =================
     Torneo save(Torneo torneo);
     Optional<Torneo> findById(Long id);
     List<Torneo> findAll();
@@ -16,14 +15,15 @@ public interface TorneoService {
     void deleteById(Long id);
     long count();
 
-    // ================= FLUJO DEL TORNEO =================
     Torneo createTorneo(Torneo torneo);
     void generateTorneo(Long torneoId);
     void startTorneo(Long torneoId);
     void finishTorneo(Long torneoId);
     void archiveTorneo(Long torneoId);
 
-    // ================= CONSULTA DE TABLA DINÁMICA =================
+    // 🌟 NUEVO MÉTODO PARA RELACIÓN MANY-TO-MANY
+    void enrollTeam(Long torneoId, Long equipoId);
+
     List<TablaPosicionDTO> calcularTablaAcumulada(Long torneoId);
     List<TablaPosicionDTO> calcularTablaHastaJornada(Long torneoId, Integer jornada);
 }

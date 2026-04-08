@@ -1,18 +1,19 @@
 package JUANDEV.PRO.GOLSYSTEM.controller;
 
+import JUANDEV.PRO.GOLSYSTEM.enums.TipoTarjeta;
 import JUANDEV.PRO.GOLSYSTEM.model.ResultadoPartido;
-import JUANDEV.PRO.GOLSYSTEM.service.ResultadoService;
+import JUANDEV.PRO.GOLSYSTEM.service.ResultadoPartidoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/partidos/{partidoId}/resultados")
-public class ResultadoController {
+public class ResultadoPartidoController {
 
-    private final ResultadoService resultadoService;
+    private final ResultadoPartidoService resultadoService;
 
-    public ResultadoController(ResultadoService resultadoService) {
+    public ResultadoPartidoController(ResultadoPartidoService resultadoService) {
         this.resultadoService = resultadoService;
     }
 
@@ -40,7 +41,7 @@ public class ResultadoController {
     public ResponseEntity<Void> registrarTarjeta(
             @PathVariable Long partidoId,
             @RequestParam Long jugadorId,
-            @RequestParam String tipoTarjeta,
+            @RequestParam TipoTarjeta tipoTarjeta,
             @RequestParam Integer minuto) {
 
         resultadoService.registrarTarjeta(partidoId, jugadorId, tipoTarjeta, minuto);

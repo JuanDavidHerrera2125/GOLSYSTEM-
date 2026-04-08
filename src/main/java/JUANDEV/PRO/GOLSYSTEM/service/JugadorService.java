@@ -31,4 +31,7 @@ public interface JugadorService {
     //Buscar Jugador por numero de camiseta
     Optional<Jugador> findByNumero(Integer numero);
 
+    Optional<Jugador> findByDocumento(String documento)
+            ;
+    List<Jugador> findByEquipo(Long equipoId);
 }

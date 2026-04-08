@@ -68,4 +68,14 @@ public class JugadorServiceImpl implements JugadorService {
     public Optional<Jugador> findByNumero(Integer numero) {
         return jugadorRepository.findByNumero(numero);
     }
+
+    @Override
+    public Optional<Jugador> findByDocumento(String documento) {
+        return jugadorRepository.findByDocumento(documento);
+    }
+
+    @Override
+    public List<Jugador> findByEquipo(Long equipoId) {
+        return jugadorRepository.findByEquipoId(equipoId);
+    }
 }

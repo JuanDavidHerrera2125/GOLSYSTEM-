@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,9 +20,14 @@ public class Fase {
 
     private String nombre;
     private Integer orden;
+    private Boolean activa; // Para saber qué fase se está jugando actualmente
 
     @Enumerated(EnumType.STRING)
     private TipoFase tipoFase;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "regla_id")
+    private ReglaCompeticion regla;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "torneo_id")
@@ -37,25 +41,15 @@ public class Fase {
     @OneToMany(mappedBy = "fase", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Partido> partidos = new ArrayList<>();
 
-    // ================= HELPERS =================
 
+    // Helpers para consistencia de datos
     public void addGrupo(Grupo grupo) {
         grupos.add(grupo);
         grupo.setFase(this);
     }
 
-    public void removeGrupo(Grupo grupo) {
-        grupos.remove(grupo);
-        grupo.setFase(null);
-    }
-
     public void addPartido(Partido partido) {
         partidos.add(partido);
         partido.setFase(this);
-    }
-
-    public void removePartido(Partido partido) {
-        partidos.remove(partido);
-        partido.setFase(null);
     }
 }

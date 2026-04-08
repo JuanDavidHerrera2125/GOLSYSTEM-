@@ -1,196 +1,127 @@
 package JUANDEV.PRO.GOLSYSTEM.service.Impl;
 
-import JUANDEV.PRO.GOLSYSTEM.enums.TipoFase;
-import JUANDEV.PRO.GOLSYSTEM.model.*;
-import JUANDEV.PRO.GOLSYSTEM.repository.FaseRepository;
+import JUANDEV.PRO.GOLSYSTEM.enums.EstadoPartido;
+import JUANDEV.PRO.GOLSYSTEM.model.Partido;
+import JUANDEV.PRO.GOLSYSTEM.model.ResultadoPartido;
 import JUANDEV.PRO.GOLSYSTEM.repository.PartidoRepository;
 import JUANDEV.PRO.GOLSYSTEM.service.PartidoService;
-import jakarta.transaction.Transactional;
+import JUANDEV.PRO.GOLSYSTEM.service.TablaPosicionService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class PartidoServiceImpl implements PartidoService {
 
-    private final PartidoRepository partidoRepository;
-    private final FaseRepository faseRepository;
-
-    // Inyección por constructor (Práctica de producción)
-    public PartidoServiceImpl(PartidoRepository partidoRepository, FaseRepository faseRepository) {
-        this.partidoRepository = partidoRepository;
-        this.faseRepository = faseRepository;
-    }
+    private final PartidoRepository repository;
+    private final TablaPosicionService tablaPosicionService; // Necesario para actualizar la tabla tras un W.O.
 
     @Override
     public Partido save(Partido partido) {
-        return partidoRepository.save(partido);
+        return repository.save(partido);
     }
 
     @Override
     public Optional<Partido> findById(Long id) {
-        return partidoRepository.findById(id);
+        return repository.findById(id);
     }
 
     @Override
     public List<Partido> findAll() {
-        return partidoRepository.findAll();
+        return repository.findAll();
     }
 
     @Override
-    public Partido update(Long id, Partido partido) {
-        return partidoRepository.findById(id)
-                .map(existing -> {
-                    existing.setFecha(partido.getFecha());
-                    existing.setHora(partido.getHora());
-                    existing.setJornada(partido.getJornada());
-                    existing.setEstado(partido.getEstado());
-                    return partidoRepository.save(existing);
-                })
-                .orElseThrow(() -> new RuntimeException("Partido no encontrado con id: " + id));
+    public Partido update(Long id, Partido partidoActualizado) {
+        return repository.findById(id).map(p -> {
+            p.setFecha(partidoActualizado.getFecha());
+            p.setHora(partidoActualizado.getHora());
+            p.setJornada(partidoActualizado.getJornada());
+            p.setEscenario(partidoActualizado.getEscenario());
+            p.setEstado(partidoActualizado.getEstado());
+            return repository.save(p);
+        }).orElseThrow(() -> new RuntimeException("Partido no encontrado con ID: " + id));
     }
 
     @Override
     public void deleteById(Long id) {
-        Partido partido = partidoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Partido no encontrado con id: " + id));
-
-        Fase fase = partido.getFase();
-        if (fase != null) {
-            fase.getPartidos().remove(partido);
-        }
-        if (partido.getGrupo() != null) {
-            partido.getGrupo().getPartidos().remove(partido);
-        }
-        partidoRepository.delete(partido);
+        repository.deleteById(id);
     }
 
     @Override
     public long count() {
-        return partidoRepository.count();
+        return repository.count();
     }
 
-    // ================= FIXTURES (ROUND-ROBIN) =================
+    @Override
+    public void cambiarEstado(Long id, EstadoPartido nuevoEstado) {
+        Partido partido = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Partido no encontrado"));
+        partido.setEstado(nuevoEstado);
+        repository.save(partido);
+    }
+
+    @Override
+    public void registrarWalkover(Long partidoId, Long equipoGanadorId) {
+        Partido partido = repository.findById(partidoId)
+                .orElseThrow(() -> new RuntimeException("Partido no encontrado"));
+
+        // Validamos que el partido no esté ya finalizado
+        if (partido.getEstado() == EstadoPartido.FINALIZADO || partido.getEstado() == EstadoPartido.WALKOVER) {
+            throw new RuntimeException("El partido ya tiene un resultado definitivo.");
+        }
+
+        // Creamos el resultado de Walkover (3-0 reglamentario)
+        ResultadoPartido res = new ResultadoPartido();
+        res.setPartido(partido);
+        res.setId(partidoId); // Sincronización @MapsId
+
+        if (equipoGanadorId.equals(partido.getEquipoLocal().getId())) {
+            res.setGolesLocal(3);
+            res.setGolesVisitante(0);
+        } else if (equipoGanadorId.equals(partido.getEquipoVisitante().getId())) {
+            res.setGolesLocal(0);
+            res.setGolesVisitante(3);
+        } else {
+            throw new RuntimeException("El ID del equipo ganador no pertenece a este partido.");
+        }
+
+        // Aplicamos cambios al objeto raíz (Partido)
+        partido.setResultadoPartido(res);
+        partido.setEstado(EstadoPartido.WALKOVER);
+
+        // Guardamos el partido (la cascada se encarga del resultado)
+        repository.save(partido);
+
+        // ¡IMPORTANTE!: Disparamos la actualización de la tabla de posiciones
+        tablaPosicionService.updateTablaFromPartido(partidoId);
+    }
+
+    @Override
+    public List<Partido> obtenerPartidosPorEstado(EstadoPartido estado) {
+        return repository.findByEstado(estado);
+    }
+
+    // --- MÉTODOS DE FIXTURE (Estructura lista para implementación) ---
 
     @Override
     public void generateFixtureLiga(Long faseId) {
-        Fase fase = getFaseOrThrow(faseId);
-        if (fase.getTipoFase() != TipoFase.LIGA) {
-            throw new RuntimeException("La fase no es tipo LIGA");
-        }
-        List<Equipo> equipos = new ArrayList<>(fase.getTorneo().getEquipos());
-        validarEquipos(equipos);
-
-        generarCalendarioRoundRobin(equipos, fase, null);
-        faseRepository.save(fase);
+        // Aquí implementarás el algoritmo de Round Robin (Todos contra todos)
+        // juandev.pro: Tip - Usa el algoritmo de rotación de Berger.
     }
 
     @Override
     public void generateFixtureGrupos(Long faseId) {
-        Fase fase = getFaseOrThrow(faseId);
-        if (fase.getTipoFase() != TipoFase.GRUPOS) {
-            throw new RuntimeException("La fase no es tipo GRUPOS");
-        }
-        if (fase.getGrupos().isEmpty()) {
-            throw new RuntimeException("La fase no tiene grupos configurados");
-        }
-
-        for (Grupo grupo : fase.getGrupos()) {
-            List<Equipo> equipos = new ArrayList<>();
-            for (GrupoEquipo ge : grupo.getEquipos()) {
-                equipos.add(ge.getEquipo());
-            }
-            validarEquipos(equipos);
-            generarCalendarioRoundRobin(equipos, fase, grupo);
-        }
-        faseRepository.save(fase);
+        // Implementar lógica para repartir equipos en grupos y generar sus partidos.
     }
 
     @Override
     public void generateFixtureEliminatoria(Long faseId) {
-        Fase fase = getFaseOrThrow(faseId);
-        if (fase.getTipoFase() != TipoFase.ELIMINACION) {
-            throw new RuntimeException("La fase no es tipo ELIMINACION");
-        }
-        List<Equipo> equipos = fase.getTorneo().getEquipos();
-        validarEquipos(equipos);
-
-        if (equipos.size() % 2 != 0) {
-            throw new RuntimeException("Cantidad de equipos inválida para eliminatoria");
-        }
-
-        int jornada = 1;
-        for (int i = 0; i < equipos.size(); i += 2) {
-            Partido partido = new Partido();
-            partido.setFase(fase);
-            partido.setEquipoLocal(equipos.get(i));
-            partido.setEquipoVisitante(equipos.get(i + 1));
-            partido.setJornada(jornada++);
-            fase.addPartido(partido);
-        }
-        faseRepository.save(fase);
-    }
-
-    // ================= ALGORITMO ROUND-ROBIN (SISTEMA BERGER) =================
-    private void generarCalendarioRoundRobin(List<Equipo> equipos, Fase fase, Grupo grupo) {
-        boolean esImpar = equipos.size() % 2 != 0;
-
-        // Si es impar, añadimos un equipo fantasma (null) para balancear las parejas
-        if (esImpar) {
-            equipos.add(null);
-        }
-
-        int numEquipos = equipos.size();
-        int numJornadas = numEquipos - 1;
-        int partidosPorJornada = numEquipos / 2;
-
-        for (int jornada = 0; jornada < numJornadas; jornada++) {
-            for (int partidoIdx = 0; partidoIdx < partidosPorJornada; partidoIdx++) {
-
-                int localIdx = (jornada + partidoIdx) % (numEquipos - 1);
-                int visitanteIdx = (numEquipos - 1 - partidoIdx + jornada) % (numEquipos - 1);
-
-                // El último equipo se queda fijo para la rotación
-                if (partidoIdx == 0) {
-                    visitanteIdx = numEquipos - 1;
-                }
-
-                Equipo local = equipos.get(localIdx);
-                Equipo visitante = equipos.get(visitanteIdx);
-
-                // Si alguno es null (fantasma), significa que el otro equipo descansa en esta jornada
-                if (local != null && visitante != null) {
-                    Partido partido = new Partido();
-                    partido.setFase(fase);
-                    partido.setGrupo(grupo);
-
-                    // Alternar localías para que sea equitativo
-                    if (jornada % 2 == 0) {
-                        partido.setEquipoLocal(local);
-                        partido.setEquipoVisitante(visitante);
-                    } else {
-                        partido.setEquipoLocal(visitante);
-                        partido.setEquipoVisitante(local);
-                    }
-
-                    partido.setJornada(jornada + 1);
-                    fase.addPartido(partido);
-                }
-            }
-        }
-    }
-
-    private Fase getFaseOrThrow(Long faseId) {
-        return faseRepository.findById(faseId)
-                .orElseThrow(() -> new RuntimeException("Fase no encontrada con id: " + faseId));
-    }
-
-    private void validarEquipos(List<Equipo> equipos) {
-        if (equipos == null || equipos.isEmpty() || (equipos.size() < 2 && equipos.get(0) != null)) {
-            throw new RuntimeException("No hay suficientes equipos para generar fixture");
-        }
+        // Implementar lógica de llaves (Brackets) tipo mundial.
     }
 }

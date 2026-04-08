@@ -19,18 +19,23 @@ public class Jugador {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String nombre;
+
+    @Column(nullable = false)
     private String apellido;
+
     private Integer numero;
     private LocalDate fechaNacimiento;
+
+    @Column(unique = true)
     private String documento;
+
     private String foto;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "equipo_id")
     private Equipo equipo;
-
-    // ⚠️ NO usar @ToString ni @Data
 
     @JsonIgnore
     @OneToMany(mappedBy = "jugador", cascade = CascadeType.ALL, orphanRemoval = true)
