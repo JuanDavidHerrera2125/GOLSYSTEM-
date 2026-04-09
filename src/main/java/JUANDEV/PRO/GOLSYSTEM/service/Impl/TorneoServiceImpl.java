@@ -1,6 +1,7 @@
 package JUANDEV.PRO.GOLSYSTEM.service.Impl;
 
 import JUANDEV.PRO.GOLSYSTEM.dto.TablaPosicionDTO;
+import JUANDEV.PRO.GOLSYSTEM.enums.EstadoPartido;
 import JUANDEV.PRO.GOLSYSTEM.enums.EstadoTorneo;
 import JUANDEV.PRO.GOLSYSTEM.enums.TipoFase;
 import JUANDEV.PRO.GOLSYSTEM.model.Equipo;
@@ -13,8 +14,8 @@ import JUANDEV.PRO.GOLSYSTEM.service.FaseService;
 import JUANDEV.PRO.GOLSYSTEM.service.PartidoService;
 import JUANDEV.PRO.GOLSYSTEM.service.TablaPosicionService;
 import JUANDEV.PRO.GOLSYSTEM.service.TorneoService;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -188,7 +189,8 @@ public class TorneoServiceImpl implements TorneoService {
             for (Partido partido : fase.getPartidos()) {
                 if (jornadaLimite != null && partido.getJornada() > jornadaLimite) continue;
 
-                if ("FINALIZADO".equals(partido.getEstado().toString())) {
+                EstadoPartido est = partido.getEstado();
+                if (est == EstadoPartido.FINALIZADO || est == EstadoPartido.WALKOVER) {
                     int golesLocal = 0, golesVisitante = 0;
 
                     if (partido.getResultadoPartido() != null) {

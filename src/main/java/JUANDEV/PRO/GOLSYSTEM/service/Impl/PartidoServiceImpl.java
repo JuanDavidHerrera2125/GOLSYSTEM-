@@ -1,8 +1,13 @@
 package JUANDEV.PRO.GOLSYSTEM.service.Impl;
 
 import JUANDEV.PRO.GOLSYSTEM.enums.EstadoPartido;
+import JUANDEV.PRO.GOLSYSTEM.enums.TipoFase;
+import JUANDEV.PRO.GOLSYSTEM.model.Equipo;
+import JUANDEV.PRO.GOLSYSTEM.model.Fase;
 import JUANDEV.PRO.GOLSYSTEM.model.Partido;
 import JUANDEV.PRO.GOLSYSTEM.model.ResultadoPartido;
+import JUANDEV.PRO.GOLSYSTEM.model.Torneo;
+import JUANDEV.PRO.GOLSYSTEM.repository.FaseRepository;
 import JUANDEV.PRO.GOLSYSTEM.repository.PartidoRepository;
 import JUANDEV.PRO.GOLSYSTEM.service.PartidoService;
 import JUANDEV.PRO.GOLSYSTEM.service.TablaPosicionService;
@@ -10,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +25,7 @@ import java.util.Optional;
 public class PartidoServiceImpl implements PartidoService {
 
     private final PartidoRepository repository;
+    private final FaseRepository faseRepository;
     private final TablaPosicionService tablaPosicionService; // Necesario para actualizar la tabla tras un W.O.
 
     @Override
@@ -111,8 +118,103 @@ public class PartidoServiceImpl implements PartidoService {
 
     @Override
     public void generateFixtureLiga(Long faseId) {
-        // Aquí implementarás el algoritmo de Round Robin (Todos contra todos)
-        // juandev.pro: Tip - Usa el algoritmo de rotación de Berger.
+        Fase fase = faseRepository.findById(faseId)
+                .orElseThrow(() -> new RuntimeException("Fase no encontrada con id: " + faseId));
+
+        if (fase.getTipoFase() != TipoFase.LIGA) {
+            throw new RuntimeException("generateFixtureLiga solo aplica a fases de tipo LIGA (actual: "
+                    + fase.getTipoFase() + ")");
+        }
+
+        if (fase.getTorneo() == null) {
+            throw new RuntimeException("La fase no está asociada a un torneo.");
+        }
+
+        if (!fase.getPartidos().isEmpty()) {
+            throw new RuntimeException("La fase ya tiene partidos. Elimínalos antes de regenerar el fixture.");
+        }
+
+        Torneo torneo = fase.getTorneo();
+        List<Equipo> equipos = new ArrayList<>(torneo.getEquipos());
+        if (equipos.size() < 2) {
+            throw new RuntimeException("Se necesitan al menos 2 equipos inscritos en el torneo para generar la liga.");
+        }
+
+        boolean idaYVuelta = fase.getRegla() != null
+                && Boolean.TRUE.equals(fase.getRegla().getTieneIdaYVuelta());
+
+        List<Partido> primeraVuelta = generarRoundRobinBerger(fase, equipos, idaYVuelta);
+        for (Partido p : primeraVuelta) {
+            fase.addPartido(p);
+            repository.save(p);
+        }
+    }
+
+    /**
+     * Round-robin circular (Berger): fija el primer slot y rota el resto cada jornada.
+     * Equipos impares: se añade un hueco (null) = fecha libre por ronda.
+     * Ida y vuelta: segunda vuelta con local/visitante invertidos y jornadas posteriores.
+     */
+    private List<Partido> generarRoundRobinBerger(Fase fase, List<Equipo> equiposTorneo, boolean idaYVuelta) {
+        List<Equipo> equipos = new ArrayList<>(equiposTorneo);
+        int n = equipos.size();
+        if (n % 2 == 1) {
+            equipos.add(null);
+            n++;
+        }
+
+        int numRondas = n - 1;
+        int mitad = n / 2;
+        List<Equipo> rotacion = new ArrayList<>(equipos);
+
+        List<Partido> primeraIda = new ArrayList<>();
+
+        for (int ronda = 0; ronda < numRondas; ronda++) {
+            int jornada = ronda + 1;
+            for (int i = 0; i < mitad; i++) {
+                Equipo a = rotacion.get(i);
+                Equipo b = rotacion.get(n - 1 - i);
+                if (a == null || b == null) {
+                    continue;
+                }
+                boolean aLocal = (ronda + i) % 2 == 0;
+                Equipo local = aLocal ? a : b;
+                Equipo visitante = aLocal ? b : a;
+                primeraIda.add(crearPartidoLiga(fase, local, visitante, jornada));
+            }
+            if (n > 2) {
+                Equipo ultimo = rotacion.remove(n - 1);
+                rotacion.add(1, ultimo);
+            }
+        }
+
+        if (!idaYVuelta) {
+            return primeraIda;
+        }
+
+        int maxJornada = numRondas;
+        List<Partido> vuelta = new ArrayList<>();
+        for (Partido p : primeraIda) {
+            vuelta.add(crearPartidoLiga(
+                    fase,
+                    p.getEquipoVisitante(),
+                    p.getEquipoLocal(),
+                    maxJornada + p.getJornada()));
+        }
+        List<Partido> todo = new ArrayList<>(primeraIda);
+        todo.addAll(vuelta);
+        return todo;
+    }
+
+    private static Partido crearPartidoLiga(Fase fase, Equipo local, Equipo visitante, int jornada) {
+        Partido partido = new Partido();
+        partido.setFase(fase);
+        partido.setGrupo(null);
+        partido.setEquipoLocal(local);
+        partido.setEquipoVisitante(visitante);
+        partido.setJornada(jornada);
+        partido.setEstado(EstadoPartido.PROGRAMADO);
+        return partido;
     }
 
     @Override
